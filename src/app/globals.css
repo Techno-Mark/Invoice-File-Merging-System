@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+input[type="file"] {
+  border: 2px solid #ccc;
+  padding: 5px;
+  border-radius: 8px;
+}
+
+[type="file"] {
+  color: #878787;
+}
+
+[type="file"]::-webkit-file-upload-button {
+  background: #1492c8;
+  border: 2px solid #1492c8;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  outline: none;
+  padding: 4px 8px;
+  text-transform: uppercase;
+  transition: all 1s ease;
+}
+
+button {
+  padding: 8px;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #005bb5;
+}
