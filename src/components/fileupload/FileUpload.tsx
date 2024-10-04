@@ -101,7 +101,6 @@ const FileUpload = () => {
         const url = window.URL.createObjectURL(
           new Blob([response.data], { type: "application/pdf" })
         );
-
         const now = new Date();
         const formattedDate = now
           .toISOString()
@@ -117,15 +116,14 @@ const FileUpload = () => {
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-
         toast.success("File downloaded successfully.", toastOptions);
       } else {
         toast.error("Failed to process the file.", toastOptions);
       }
     } catch (error: any) {
       toast.error(error.message || "An error occurred.", toastOptions);
-      setDisabled(false);
     }
+    setDisabled(false);
   };
 
   // const handleDownload = async () => {
@@ -197,8 +195,8 @@ const FileUpload = () => {
                       />
                       <p
                         className={`mt-1 text-sm ${pdfFileError
-                            ? "text-red-500 dark:text-red-300"
-                            : "text-gray-500 dark:text-gray-500"
+                          ? "text-red-500 dark:text-red-300"
+                          : "text-gray-500 dark:text-gray-500"
                           } `}
                       >
                         {pdfFileError
@@ -217,8 +215,8 @@ const FileUpload = () => {
                       />
                       <p
                         className={`mt-1 text-sm ${csvExcelFileError
-                            ? "text-red-500 dark:text-red-300"
-                            : "text-gray-500 dark:text-gray-500"
+                          ? "text-red-500 dark:text-red-300"
+                          : "text-gray-500 dark:text-gray-500"
                           } `}
                       >
                         {csvExcelFileError
@@ -240,8 +238,8 @@ const FileUpload = () => {
                         </button> */}
                       <button
                         className={`flex gap-[15px] bg-[#1492c8] text-white text-sm font-semibold px-4 py-2.5 rounded-md ${disabled || !bothFilesSelected
-                            ? "cursor-not-allowed opacity-50"
-                            : ""
+                          ? "cursor-not-allowed opacity-50"
+                          : ""
                           }`}
                         onClick={bothFilesSelected ? handleUpload : undefined}
                       >
