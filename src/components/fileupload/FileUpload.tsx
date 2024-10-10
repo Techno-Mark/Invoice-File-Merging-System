@@ -1,12 +1,11 @@
 "use client";
 
-import Spinner from "@/assets/icon/Spinner";
-import loader from "@/public/loder.gif";
 import axios from "axios";
 import Image from "next/image";
 import React, { useState } from "react";
-import { ToastContainer, ToastOptions, toast } from "react-toastify";
+import { ToastContainer, toast, ToastOptions } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import loader from "@/public/loder.gif";
 
 const toastOptions: ToastOptions = {
   position: "top-right",
@@ -19,47 +18,55 @@ const toastOptions: ToastOptions = {
   theme: "light",
 };
 
+const callApi = async (formData: FormData) => {
+  try {
+    const response = await axios.post(
+      "http://localhost:3001/api/invoice/invoiceMerge",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        responseType: "blob", // Expecting binary response (xlsx)
+      }
+    );
+    return response;
+  } catch (error: any) {
+    toast.error(error.message || "An error occurred.", toastOptions);
+    throw error;
+  }
+};
+
 const FileUpload = () => {
-  const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [csvExcelFile, setCsvExcelFile] = useState<File | null>(null);
+  const [excelFiles, setExcelFiles] = useState<File[]>([]);
   const [disabled, setDisabled] = useState<boolean>(false);
-  const [pdfFileError, setPdfFileError] = useState<string | null>(null);
-  const [csvExcelFileError, setCsvExcelFileError] = useState<string | null>(
-    null
-  );
+  const [excelFileError, setExcelFileError] = useState<string | null>(null);
 
-  // Check if both files are selected
-  const bothFilesSelected =
-    pdfFile && csvExcelFile && !pdfFileError && !csvExcelFileError;
+  // Check if all files are valid and selected
+  const allFilesSelected = excelFiles.length === 3 && !excelFileError;
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    fileType: string
-  ) => {
-    const file = e.target.files ? e.target.files[0] : null;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const selectedFiles = Array.from(files);
 
-    if (file) {
-      const fileName = file.name;
+      if (selectedFiles.length !== 3) {
+        setExcelFileError("Please upload exactly three Excel files.");
+      } else {
+        const invalidFile = selectedFiles.some(
+          (file) => !file.name.endsWith(".csv") && !file.name.endsWith(".xlsx")
+        );
+        const largeFile = selectedFiles.some(
+          (file) => file.size > 200 * 1024 * 1024 // 200MB limit
+        );
 
-      if (fileType === "pdf") {
-        setPdfFile(file);
-
-        if (!fileName.endsWith(".pdf")) {
-          setPdfFileError("Only PDF files are valid");
-        } else if (file.size > 200 * 1024 * 1024) {
-          setPdfFileError("Please select file less than 200 MB");
+        if (invalidFile) {
+          setExcelFileError("Only CSV or Excel files are valid.");
+        } else if (largeFile) {
+          setExcelFileError("Each file must be less than 200 MB.");
         } else {
-          setPdfFileError(null);
-        }
-      } else if (fileType === "csv-excel") {
-        setCsvExcelFile(file);
-
-        if (!fileName.endsWith(".csv") && !fileName.endsWith(".xlsx")) {
-          setCsvExcelFileError("Only CSV or Excel files are valid");
-        } else if (file.size > 200 * 1024 * 1024) {
-          setCsvExcelFileError("Please select file less than 200 MB");
-        } else {
-          setCsvExcelFileError(null);
+          setExcelFileError(null);
+          setExcelFiles(selectedFiles); // Set the valid files
         }
       }
     }
@@ -68,38 +75,27 @@ const FileUpload = () => {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     setDisabled(true);
-    const formData = new FormData();
 
-    if (!pdfFile || !csvExcelFile) {
-      toast.error("Both files must be selected.", toastOptions);
+    if (excelFiles.length !== 3) {
+      toast.error("Please select three Excel files.", toastOptions);
       setDisabled(false);
       return;
     }
- 
-    formData.append("xlsx_file", csvExcelFile);
-    formData.append("pdf_file", pdfFile);
+
+    const formData = new FormData();
+    excelFiles.forEach((file) => formData.append("files", file));
 
     try {
-      // Send the request to the server
-      let response = await axios.post(
-        "https://pythonapi.pacificabs.com:5001/invoice_merge",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          responseType: "blob", // This is crucial to handle binary data
-        }
-      );
+      const response = await callApi(formData);
 
       if (response.status === 200) {
-        toast.success("File processed successfully.", toastOptions);
-        setPdfFile(null);
-        setCsvExcelFile(null);
+        toast.success("Files processed successfully.", toastOptions);
 
-        // Convert the binary data into a Blob and create a URL for downloading
+        // Handle file download (Excel)
         const url = window.URL.createObjectURL(
-          new Blob([response.data], { type: "application/pdf" })
+          new Blob([response.data], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          })
         );
         const now = new Date();
         const formattedDate = now
@@ -107,7 +103,7 @@ const FileUpload = () => {
           .slice(0, 19)
           .replace("T", " ")
           .replace(/:/g, "-");
-        const dynamicFilename = `Invoice - ${formattedDate}.pdf`;
+        const dynamicFilename = `Invoice - ${formattedDate}.xlsx`;
 
         const link = document.createElement("a");
         link.href = url;
@@ -116,56 +112,18 @@ const FileUpload = () => {
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
+
+        setExcelFiles([]);
         toast.success("File downloaded successfully.", toastOptions);
       } else {
-        toast.error("Failed to process the file.", toastOptions);
+        toast.error("Failed to process the files.", toastOptions);
       }
     } catch (error: any) {
-      toast.error(error.message || "An error occurred.", toastOptions);
+      // Error handled in callApi
     }
+
     setDisabled(false);
   };
-
-  // const handleDownload = async () => {
-  //   try {
-  //     const response = await axios.get(
-  //       `http://localhost:3001/api/download?folderName=${downloadURL}`,
-  //       {
-  //         responseType: "blob",
-  //       }
-  //     );
-
-  //     if (response.data) {
-  //       const url = window.URL.createObjectURL(
-  //         new Blob([response.data], { type: "application/pdf" })
-  //       );
-
-  //       const now = new Date();
-  //       const formattedDate = now
-  //         .toISOString()
-  //         .slice(0, 19)
-  //         .replace("T", " ")
-  //         .replace(/:/g, "-");
-  //       const dynamicFilename = `Invoice - ${formattedDate}.pdf`;
-
-  //       const link = document.createElement("a");
-  //       link.href = url;
-  //       link.setAttribute("download", `"${dynamicFilename}"`);
-  //       document.body.appendChild(link);
-  //       link.click();
-  //       document.body.removeChild(link);
-  //       window.URL.revokeObjectURL(url);
-
-  //       toast.success("File downloaded successfully.", toastOptions);
-  //       setShowDownloadBtn(false);
-  //       setDownloadURL("");
-  //     } else {
-  //       toast.error("Failed to download file.", toastOptions);
-  //     }
-  //   } catch (error: any) {
-  //     toast.error(error.message, toastOptions);
-  //   }
-  // };
 
   return (
     <>
@@ -174,86 +132,108 @@ const FileUpload = () => {
           <Image src={loader} alt="Loader" />
         </div>
       ) : (
+        // <section className="automationSection px-5 py-12">
+        //   <div className="container mx-auto px-20">
+        //     <div className="relative overflow-x-auto shadow-lg sm:rounded-lg">
+        //       <ToastContainer {...toastOptions} />
+        //       <div className="text-sm font-semibold uppercase text-white bg-[#1492c8] dark:bg-bg-[#1492c8] dark:text-white p-4">
+        //         Invoice & File Merging System
+        //       </div>
+        //       <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        //         <tbody>
+        //           <tr className="bg-white dark:bg-gray-800 dark:border-gray-700 text-center">
+        //             <td className="px-6 py-8 font-medium text-gray-900 whitespace-nowrap dark:text-white text-start">
+        //               <input
+        //                 className="w-full text-sm text-gray-900
+        //                  border border-gray-300 cursor-pointer bg-gray-50 dark:text-gray-400 
+        //                  focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+        //                 id="file_input_csv_excel"
+        //                 type="file"
+        //                 accept=".xlsx"
+        //                 multiple
+        //                 onChange={handleChange}
+        //               />
+        //               <p
+        //                 className={`mt-1 text-sm ${excelFileError
+        //                   ? "text-red-500 dark:text-red-300"
+        //                   : "text-gray-500 dark:text-gray-500"
+        //                   }`}
+        //               >
+        //                 {excelFileError
+        //                   ? excelFileError
+        //                   : "Upload exactly 3 .csv or .xlsx files here."}
+        //               </p>
+        //             </td>
+        //           </tr>
+        //           <tr className="bg-white dark:bg-gray-800 dark:border-gray-700 text-center ">
+        //             <td className="px-6 py-6 font-medium text-gray-900 whitespace-nowrap dark:text-white ">
+        //               <button
+        //                 className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${!allFilesSelected || disabled
+        //                   ? "opacity-50 cursor-not-allowed "
+        //                   : ""
+        //                   }`}
+        //                 onClick={handleUpload}
+        //                 disabled={!allFilesSelected || disabled}
+        //               >
+        //                 Merge Excel Files
+        //               </button>
+        //             </td>
+        //           </tr>
+        //         </tbody>
+        //       </table>
+        //     </div>
+        //   </div>
+        // </section>
+
         <section className="automationSection px-5 py-12">
-          <div className="container mx-auto px-20">
-            <div className="relative overflow-x-auto shadow-lg sm:rounded-lg">
-              <ToastContainer {...toastOptions} />
-              <div className="text-sm font-semibold uppercase text-white bg-[#1492c8] dark:bg-bg-[#1492c8] dark:text-white p-4">
-                Invoice & File Merging System
+  <div className="container mx-auto px-20">
+    <div className="relative overflow-x-auto shadow-lg sm:rounded-lg">
+      <ToastContainer {...toastOptions} />
+      <div className="text-sm font-semibold uppercase text-white bg-[#1492c8] dark:bg-bg-[#1492c8] dark:text-white p-4">
+        Invoice & File Merging System
+      </div>
+      <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+        <tbody>
+          <tr className="bg-white dark:bg-gray-800 dark:border-gray-700 text-center">
+            <td className="px-6 py-8 font-medium text-gray-900 whitespace-nowrap dark:text-white text-start">
+              <div className="flex items-center space-x-4">
+                <input
+                  className="w-full text-sm text-gray-900 border border-gray-300 cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                  id="file_input_csv_excel"
+                  type="file"
+                  accept=".xlsx"
+                  multiple
+                  onChange={handleChange}
+                />
+                <button
+                  className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ${!allFilesSelected || disabled
+                    ? "opacity-50 cursor-not-allowed "
+                    : ""
+                    }`}
+                  onClick={handleUpload}
+                  disabled={!allFilesSelected || disabled}
+                >
+                  Merge Excel Files
+                </button>
               </div>
-              <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                <tbody>
-                  <tr className="bg-white dark:bg-gray-800 dark:border-gray-700 text-center">
-                    <td className="px-6 py-8 font-medium text-gray-900 whitespace-nowrap dark:text-white text-start">
-                      {/* PDF File Upload */}
-                      <input
-                        className="w-full text-sm text-gray-900 border border-gray-300 cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                        id="file_input_pdf"
-                        type="file"
-                        accept=".pdf"
-                        onChange={(e) => handleChange(e, "pdf")}
-                      />
-                      <p
-                        className={`mt-1 text-sm ${pdfFileError
-                          ? "text-red-500 dark:text-red-300"
-                          : "text-gray-500 dark:text-gray-500"
-                          } `}
-                      >
-                        {pdfFileError
-                          ? pdfFileError
-                          : "Upload your .pdf file here."}
-                      </p>
-                    </td>
-                    <td className="px-6 py-8 font-medium text-gray-900 whitespace-nowrap dark:text-white text-start">
-                      {/* CSV/Excel File Upload */}
-                      <input
-                        className="w-full text-sm text-gray-900 border border-gray-300 cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                        id="file_input_csv_excel"
-                        type="file"
-                        accept=".csv, .xlsx"
-                        onChange={(e) => handleChange(e, "csv-excel")}
-                      />
-                      <p
-                        className={`mt-1 text-sm ${csvExcelFileError
-                          ? "text-red-500 dark:text-red-300"
-                          : "text-gray-500 dark:text-gray-500"
-                          } `}
-                      >
-                        {csvExcelFileError
-                          ? csvExcelFileError
-                          : "Upload your .csv or .xlsx file here."}
-                      </p>
-                    </td>
-                    <td className="flex px-6 py-8 justify-center w-full">
+              <p
+                className={`mt-1 text-sm ${excelFileError
+                  ? "text-red-500 dark:text-red-300"
+                  : "text-gray-500 dark:text-gray-500"
+                  }`}
+              >
+                {excelFileError
+                  ? excelFileError
+                  : "Upload exactly 3 .csv or .xlsx files here."}
+              </p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
 
-                      {/* <button
-                          id="downloadClick"
-                          className={`flex gap-[15px] bg-[#259916] text-white text-sm font-semibold px-4 py-2.5 rounded-md ${showDownloadBtn
-                              ? ""
-                              : "cursor-not-allowed opacity-50"
-                            }`}
-                          onClick={handleDownload}
-                        >
-                          Download
-                        </button> */}
-                      <button
-                        className={`flex gap-[15px] bg-[#1492c8] text-white text-sm font-semibold px-4 py-2.5 rounded-md ${disabled || !bothFilesSelected
-                          ? "cursor-not-allowed opacity-50"
-                          : ""
-                          }`}
-                        onClick={bothFilesSelected ? handleUpload : undefined}
-                      >
-                        Upload
-                        {disabled && <Spinner />}
-                      </button>
-
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
       )}
     </>
   );
