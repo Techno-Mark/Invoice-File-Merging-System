@@ -1,5 +1,5 @@
-import Header from "@/components/common/Header";
-import Fileuplaod from "@/components/fileupload/FileUpload";
+import Header from "@/components/common/Header"
+import Fileuplaod from "@/components/fileupload/FileUpload"
 
 export default function Home() {
   return (
@@ -9,5 +9,5 @@ export default function Home() {
         <Fileuplaod />
       </main>
     </>
-  );
+  )
 }

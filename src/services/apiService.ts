@@ -1,4 +1,3 @@
- 
 import { toast } from "react-toastify"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL
@@ -6,7 +5,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
     if (response.status === 401) {
-      
       throw new Error("Unauthorized. Token missing or expired")
     } else if (response.status === 422) {
       const errorResponse = await response.json()
@@ -52,15 +50,11 @@ export const fetchData = async (
   options: any = {}
 ) => {
   try {
-  
-    
-  
-
     const response = await fetch(`${API_URL}/${endpoint}`, {
       ...options,
       headers: {
         "Content-Type": "application/json",
-       
+
         ...options.headers
       }
     })
@@ -93,11 +87,9 @@ export const del = (endpoint: string) =>
 
 export const postContentBlock = async (endpoint: string, data: any) => {
   try {
-    
-    
     const response = await fetch(`${API_URL}/${endpoint}`, {
       method: "POST",
-      
+
       body: data
     })
 
@@ -114,14 +106,11 @@ export const postDataToOrganizationAPIs = async (
   data: any
 ) => {
   try {
-    
-     
-
     const response = await fetch(`${API_URL}/${endpoint}`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        
+        "Content-Type": "application/json"
+
       },
       body: JSON.stringify(data)
     })
@@ -140,13 +129,12 @@ export const withoutAuthPost = async (
   options: any = {}
 ) => {
   try {
-    
     const response = await fetch(`${API_URL}/${endpoint}`, {
       method: 'POST',
       ...options,
       headers: {
         "Content-Type": "application/json",
-        
+
         ...options.headers
       },
       body: JSON.stringify(data)

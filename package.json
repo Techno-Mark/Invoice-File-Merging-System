@@ -6,11 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "lint-fix": "eslint . --fix"
   },
   "dependencies": {
     "@mui/material": "^6.1.0",
     "axios": "^1.7.7",
+    "eslint-plugin-n": "^17.11.1",
     "next": "14.2.11",
     "react": "^18",
     "react-dom": "^18",
@@ -21,7 +23,12 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
-    "eslint-config-next": "14.2.11",
+    "eslint-config-next": "14.1.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-react": "^7.33.2",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
