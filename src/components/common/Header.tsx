@@ -1,6 +1,6 @@
-import Image from "next/image";
-import React from "react";
-import logo from "@/public/logo.svg";
+import Image from "next/image"
+import React from "react"
+import logo from "@/public/logo.svg"
 
 export default function Header() {
   return (
@@ -9,5 +9,5 @@ export default function Header() {
         <Image src={logo} width={150} height={150} alt="Logo" />
       </div>
     </div>
-  );
+  )
 }
