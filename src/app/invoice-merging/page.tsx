@@ -63,7 +63,6 @@ const InvoiceMerging = () => {
       }
     }
   };
-
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     setDisabled(true);
@@ -81,7 +80,8 @@ const InvoiceMerging = () => {
     try {
       // Send the request to the server
       const response = await axios.post(
-        'https://pythonapi.pacificabs.com:5001/invoice_merge',
+        // 'https://pythonapi.pacificabs.com:5001/invoice_merge',
+        process.env.NEXT_PUBLIC_API_URL_INVOICE as string,
         formData,
         {
           headers: {
