@@ -1,0 +1,54 @@
+{
+  "extends": [
+    "next/core-web-vitals",
+    "eslint:recommended",
+    "standard"
+  ],
+  "plugins": [
+    "react",
+    "react-hooks"
+  ],
+  "rules": {
+    "eqeqeq": "off",
+    "quotes": ["error", "single", { "avoidEscape": true }],
+    "react/prop-types": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "off",
+    "space-before-function-paren": [
+      "error",
+      {
+        "anonymous": "never",
+        "named": "never",
+        "asyncArrow": "always"
+      }
+    ],
+    "multiline-ternary": "off",
+    "react/react-in-jsx-scope": "off",
+    "react/no-unknown-property": [
+      "error",
+      {
+        "ignore": [
+          "amp-custom",
+          "global",
+          "on",
+          "custom-element",
+          "custom-template",
+          "option",
+          "on",
+          "items",
+          "fallback",
+          "update",
+          "item"
+        ]
+      }
+    ],
+    "semi": ["error", "always"],
+    "object-curly-spacing": ["error", "always"],
+    "react/no-unescaped-entities": "off"
+  },
+  "globals": {
+    "React": "writable"
+  },
+  "root": true
+  
+}

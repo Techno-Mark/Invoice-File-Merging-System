@@ -1,13 +1,7 @@
-import Header from "@/components/common/Header";
-import Fileuplaod from "@/components/fileupload/FileUpload";
+import ExcelMerging from './excel-merging/page';
 
 export default function Home() {
   return (
-    <>
-      <main className={`min-h-screen`}>
-        <Header />
-        <Fileuplaod />
-      </main>
-    </>
+    <ExcelMerging />
   );
 }
