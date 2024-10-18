@@ -149,7 +149,7 @@ const ExcelMerging = () => {
                     Excel Merging
                   </div>
                   <tr className="bg-white dark:bg-gray-800 dark:border-gray-700 text-center">
-                    <td className="px-6 py-8 font-medium text-gray-900 whitespace-nowrap dark:text-white text-start">
+                    <td className=" py-8 font-medium text-gray-900 whitespace-nowrap dark:text-white text-start">
                       <div className="flex flex-row items-center">
                         <div className="flex flex-col px-6">
                           <label htmlFor="file_input_csv_excel" className="font-bold text-gray-800 dark:text-white">
