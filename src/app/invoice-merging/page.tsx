@@ -63,8 +63,6 @@ const InvoiceMerging = () => {
       }
     }
   };
-  console.log(process.env.NEXT_PUBLIC_API_URL_INVOICE);
-  
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     setDisabled(true);
