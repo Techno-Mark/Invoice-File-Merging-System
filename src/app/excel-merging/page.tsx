@@ -25,31 +25,46 @@ const ExcelMerging = () => {
   const [previousMonthFile, setPreviousMonthFile] = useState<File | null>(null);
   const [disabled, setDisabled] = useState<boolean>(false);
   const [excelFileError, setExcelFileError] = useState<string | null>(null);
+  const [previousMonthFileError, setPreviousMonthFileError] = useState<string | null>(null);
 
-  const allFilesSelected = excelFiles.length === 3 && !excelFileError;
+  const allFilesSelected = excelFiles.length === 3 && !excelFileError && previousMonthFile !== null && !previousMonthFileError;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, isPreviousMonth = false) => {
     const files = e.target.files;
     if (files) {
       const selectedFiles = Array.from(files);
 
-      if (!isPreviousMonth && selectedFiles.length !== 3) {
-        setExcelFileError('Please upload exactly three Excel files.');
-      } else {
+      if (isPreviousMonth) {
+        // Validation for previous month file
         const invalidFile = selectedFiles.some(
-          (file) => !file.name.endsWith('.csv') && !file.name.endsWith('.xlsx')
+          (file) => !file.name.endsWith('.xlsx')
         );
         const largeFile = selectedFiles.some((file) => file.size > 100 * 1024 * 1024);
 
         if (invalidFile) {
-          setExcelFileError('Please upload a correct file.');
+          setPreviousMonthFileError('Please upload a valid Excel file (.xlsx).');
         } else if (largeFile) {
-          setExcelFileError('File too large.');
+          setPreviousMonthFileError('File too large.');
         } else {
-          setExcelFileError(null);
-          if (isPreviousMonth) {
-            setPreviousMonthFile(selectedFiles[0]);
+          setPreviousMonthFileError(null);
+          setPreviousMonthFile(selectedFiles[0]);
+        }
+      } else {
+        // Validation for 3 Excel files
+        if (selectedFiles.length !== 3) {
+          setExcelFileError('Please upload exactly three Excel files.');
+        } else {
+          const invalidFile = selectedFiles.some(
+            (file) => !file.name.endsWith('.xlsx')
+          );
+          const largeFile = selectedFiles.some((file) => file.size > 100 * 1024 * 1024);
+
+          if (invalidFile) {
+            setExcelFileError('Please upload valid Excel files (.xlsx).');
+          } else if (largeFile) {
+            setExcelFileError('File too large.');
           } else {
+            setExcelFileError(null);
             setExcelFiles(selectedFiles);
           }
         }
@@ -62,16 +77,20 @@ const ExcelMerging = () => {
     setDisabled(true);
 
     if (excelFiles.length !== 3) {
-      toast.error('Please select three Excel files.', toastOptions);
+      toast.error('Please select exactly three Excel files.', toastOptions);
+      setDisabled(false);
+      return;
+    }
+
+    if (!previousMonthFile) {
+      toast.error('Please upload the previous month Excel file.', toastOptions);
       setDisabled(false);
       return;
     }
 
     const formData = new FormData();
     excelFiles.forEach((file) => formData.append('files', file));
-    if (previousMonthFile) {
-      formData.append('previousMonthInvoice', previousMonthFile);
-    }
+    formData.append('newFile', previousMonthFile);
 
     try {
       const response = await callApi(Invoice.invoiceMerge, formData, 'blob');
@@ -101,6 +120,7 @@ const ExcelMerging = () => {
         window.URL.revokeObjectURL(url);
 
         setExcelFiles([]);
+        setPreviousMonthFile(null);
       } else {
         toast.error('Failed to process the files.', toastOptions);
       }
@@ -130,7 +150,7 @@ const ExcelMerging = () => {
                   </div>
                   <tr className="bg-white dark:bg-gray-800 dark:border-gray-700 text-center">
                     <td className="px-6 py-8 font-medium text-gray-900 whitespace-nowrap dark:text-white text-start">
-                      <div className="flex flex-row  items-center">
+                      <div className="flex flex-row items-center">
                         <div className="flex flex-col px-6">
                           <label htmlFor="file_input_csv_excel" className="font-bold text-gray-800 dark:text-white">
                             Upload Excel Files <span className="text-red-500">*</span>
@@ -143,17 +163,14 @@ const ExcelMerging = () => {
                             multiple
                             onChange={(e) => handleFileChange(e)}
                           />
-                          {/* <p className={`mt-1 text-sm ${excelFileError ? "text-red-500" : "text-gray-500"}`}>
-                            {excelFileError || "Please upload exactly 3 Excel (.xlsx) files."}
-                          </p> */}
                           <p className={`mt-1 text-sm ${excelFileError ? 'text-red-500' : 'text-gray-500'}`}>
                             {excelFileError || 'Please upload exactly 3 Excel (.xlsx) files.'}
                           </p>
-
                         </div>
-                        <div className="flex flex-col  px-6">
+
+                        <div className="flex flex-col px-6">
                           <label htmlFor="previous_month_file" className="font-bold text-gray-800 dark:text-white">
-                            Upload Previous Month File (Optional)
+                            Upload Previous Month File  <span className="text-red-500">*</span>
                           </label>
                           <input
                             className="w-96 text-sm text-gray-900 border border-gray-300 cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
@@ -162,10 +179,11 @@ const ExcelMerging = () => {
                             accept=".xlsx"
                             onChange={(e) => handleFileChange(e, true)}
                           />
-                          <p className="mt-1 text-sm text-gray-500">
-                            You can add the previous month's xlsx.
+                          <p className={`mt-1 text-sm ${previousMonthFileError ? 'text-red-500' : 'text-gray-500'}`}>
+                            {previousMonthFileError || 'Please upload the previous month Excel file.'}
                           </p>
                         </div>
+
                         <div className="flex flex-col px-6">
                           <button
                             className={`w-48 bg-[#1492c8] hover:bg-[#2082ac] text-white font-bold py-2 px-4 rounded ${!allFilesSelected || disabled ? 'opacity-60 cursor-not-allowed' : ''
@@ -185,7 +203,6 @@ const ExcelMerging = () => {
             </div>
           </div>
         </section>
-
       )}
     </>
   );

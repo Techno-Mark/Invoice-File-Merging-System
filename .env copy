@@ -1,2 +1,5 @@
-NEXT_PUBLIC_API_URL=http://localhost:3001/api
+# NEXT_PUBLIC_API_URL=http://localhost:3001/api
 
+# NEXT_PUBLIC_API_URLhttps://crm-stageapi.pacificabs.com:3012/
+# NEXT_PUBLIC_API_URLhttp://crm-stageapi.pacificabs.com:3013/
+ 
