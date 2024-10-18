@@ -1,16 +1,16 @@
-import axios from 'axios'
-import { toast, ToastOptions } from 'react-toastify'
+import axios from 'axios';
+import { toast, ToastOptions } from 'react-toastify';
 
 const toastOptions: ToastOptions = {
-  position: "top-right",
+  position: 'top-right',
   autoClose: 5000,
   hideProgressBar: false,
   closeOnClick: true,
   pauseOnHover: true,
   draggable: true,
   progress: undefined,
-  theme: "light"
-}
+  theme: 'light'
+};
 export const callApi = async (
   url: string,
   formData: FormData,
@@ -22,11 +22,11 @@ export const callApi = async (
         'Content-Type': 'multipart/form-data'
       },
       responseType // Dynamic responseType
-    })
-    return response
+    });
+    return response;
   } catch (error: any) {
-    toast.error(error.message || "An error occurred.", toastOptions)
+    toast.error(error.message || 'An error occurred.', toastOptions);
 
-    throw error
+    throw error;
   }
-}
+};
