@@ -1,5 +1,5 @@
 # NEXT_PUBLIC_API_URL=http://localhost:3001/api
 
-# NEXT_PUBLIC_API_URL=https://crm-stageapi.pacificabs.com:3012/
-# NEXT_PUBLIC_API_URL=http://crm-stageapi.pacificabs.com:3013/
+# NEXT_PUBLIC_API_URL=https://crm-stageapi.pacificabs.com:3012/api
+# NEXT_PUBLIC_API_URL=http://crm-stageapi.pacificabs.com:3013/api
 # NEXT_PUBLIC_API_URL_INVOICE=https://pythonapi.pacificabs.com:5001/invoice_merge
