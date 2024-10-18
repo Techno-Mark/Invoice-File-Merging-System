@@ -110,7 +110,7 @@ const ExcelMerging = () => {
           .replace('T', ' ')
           .replace(/:/g, '-');
         const dynamicFilename = `Invoice - ${formattedDate}.xlsx`;
-        toast.success('File downloaded successfully.', toastOptions);
+        // toast.success('File downloaded successfully.', toastOptions);
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', dynamicFilename);
