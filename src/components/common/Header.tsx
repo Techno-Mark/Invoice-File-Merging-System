@@ -27,26 +27,39 @@ export default function Header() {
             <li>
               <Link
                 href="/"
-                className={`text-lg transition duration-200 ${isActive('/')
+                className={`text-lg transition duration-200 ${
+                  isActive('/')
                     ? 'text-yellow-300 font-bold'
                     : 'text-white hover:text-yellow-200'
-                  }`}
+                }`}
               >
                 Excel Merging
               </Link>
             </li>
             <li>
               <Link
-                href="/invoice-merging"
-                className={`text-lg transition duration-200 ${isActive('/invoice-merging')
+                href="/generate-billing"
+                className={`text-lg transition duration-200 ${
+                  isActive('/generate-billing')
                     ? 'text-yellow-300 font-bold'
                     : 'text-white hover:text-yellow-200'
-                  }`}
+                }`}
+              >
+                Generate Billing File
+              </Link>
+            </li>
+            <li>
+              <Link
+                href="/invoice-merging"
+                className={`text-lg transition duration-200 ${
+                  isActive('/invoice-merging')
+                    ? 'text-yellow-300 font-bold'
+                    : 'text-white hover:text-yellow-200'
+                }`}
               >
                 Invoice Merging
               </Link>
             </li>
-
           </ul>
         </nav>
       </div>
