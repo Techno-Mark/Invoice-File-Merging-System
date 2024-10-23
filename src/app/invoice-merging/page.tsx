@@ -6,6 +6,7 @@ import Image from 'next/image';
 import React, { useState } from 'react';
 import { ToastContainer, ToastOptions, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { formattedDate } from '@/utils/CommonFunctions';
 
 const toastOptions: ToastOptions = {
   position: 'top-right',
@@ -100,14 +101,7 @@ const InvoiceMerging = () => {
         const url = window.URL.createObjectURL(
           new Blob([response.data], { type: 'application/pdf' })
         );
-        const now = new Date();
-        const formattedDate = now
-          .toISOString()
-          .slice(0, 19)
-          .replace('T', ' ')
-          .replace(/:/g, '-');
-        const dynamicFilename = `Invoice - ${formattedDate}.pdf`;
-
+        const dynamicFilename = `Invoice - ${formattedDate()}.pdf`;
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', dynamicFilename);
@@ -125,47 +119,6 @@ const InvoiceMerging = () => {
     setDisabled(false);
   };
 
-  // const handleDownload = async () => {
-  //   try {
-  //     const response = await axios.get(
-  //       `http://localhost:3001/api/download?folderName=${downloadURL}`,
-  //       {
-  //         responseType: "blob",
-  //       }
-  //     );
-
-  //     if (response.data) {
-  //       const url = window.URL.createObjectURL(
-  //         new Blob([response.data], { type: "application/pdf" })
-  //       );
-
-  //       const now = new Date();
-  //       const formattedDate = now
-  //         .toISOString()
-  //         .slice(0, 19)
-  //         .replace("T", " ")
-  //         .replace(/:/g, "-");
-  //       const dynamicFilename = `Invoice - ${formattedDate}.pdf`;
-
-  //       const link = document.createElement("a");
-  //       link.href = url;
-  //       link.setAttribute("download", `"${dynamicFilename}"`);
-  //       document.body.appendChild(link);
-  //       link.click();
-  //       document.body.removeChild(link);
-  //       window.URL.revokeObjectURL(url);
-
-  //       toast.success("File downloaded successfully.", toastOptions);
-  //       setShowDownloadBtn(false);
-  //       setDownloadURL("");
-  //     } else {
-  //       toast.error("Failed to download file.", toastOptions);
-  //     }
-  //   } catch (error: any) {
-  //     toast.error(error.message, toastOptions);
-  //   }
-  // };
-
   return (
     <>
       {disabled ? (
@@ -178,7 +131,7 @@ const InvoiceMerging = () => {
             <div className="relative overflow-x-auto shadow-lg sm:rounded-lg">
               <ToastContainer {...toastOptions} />
               <div className="text-sm font-semibold uppercase text-white bg-[#1492c8] dark:bg-bg-[#1492c8] dark:text-white p-4">
-              Invoice Merging
+                Invoice Merging
               </div>
               <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <tbody>
@@ -193,10 +146,11 @@ const InvoiceMerging = () => {
                         onChange={(e) => handleChange(e, 'pdf')}
                       />
                       <p
-                        className={`mt-1 text-sm ${pdfFileError
-                          ? 'text-red-500 dark:text-red-300'
-                          : 'text-gray-500 dark:text-gray-500'
-                          } `}
+                        className={`mt-1 text-sm ${
+                          pdfFileError
+                            ? 'text-red-500 dark:text-red-300'
+                            : 'text-gray-500 dark:text-gray-500'
+                        } `}
                       >
                         {pdfFileError || 'Upload your .pdf file here.'}
                       </p>
@@ -211,37 +165,28 @@ const InvoiceMerging = () => {
                         onChange={(e) => handleChange(e, 'csv-excel')}
                       />
                       <p
-                        className={`mt-1 text-sm ${csvExcelFileError
-                          ? 'text-red-500 dark:text-red-300'
-                          : 'text-gray-500 dark:text-gray-500'
-                          } `}
+                        className={`mt-1 text-sm ${
+                          csvExcelFileError
+                            ? 'text-red-500 dark:text-red-300'
+                            : 'text-gray-500 dark:text-gray-500'
+                        } `}
                       >
-                        {csvExcelFileError || 'Upload your .csv or .xlsx file here.'}
+                        {csvExcelFileError ||
+                          'Upload your .csv or .xlsx file here.'}
                       </p>
                     </td>
                     <td className="flex px-6 py-8 justify-center w-full">
-
-                      {/* <button
-                          id="downloadClick"
-                          className={`flex gap-[15px] bg-[#259916] text-white text-sm font-semibold px-4 py-2.5 rounded-md ${showDownloadBtn
-                              ? ""
-                              : "cursor-not-allowed opacity-50"
-                            }`}
-                          onClick={handleDownload}
-                        >
-                          Download
-                        </button> */}
                       <button
-                        className={`flex gap-[15px] bg-[#1492c8] text-white text-sm font-semibold px-4 py-2.5 rounded-md ${disabled || !bothFilesSelected
-                          ? 'cursor-not-allowed opacity-50'
-                          : ''
-                          }`}
+                        className={`flex gap-[15px] bg-[#1492c8] text-white text-sm font-semibold px-4 py-2.5 rounded-md ${
+                          disabled || !bothFilesSelected
+                            ? 'cursor-not-allowed opacity-50'
+                            : ''
+                        }`}
                         onClick={bothFilesSelected ? handleUpload : undefined}
                       >
                         Upload
                         {disabled && <Spinner />}
                       </button>
-
                     </td>
                   </tr>
                 </tbody>

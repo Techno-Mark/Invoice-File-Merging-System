@@ -6,7 +6,7 @@ import { ToastContainer, toast, ToastOptions } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import loader from '@/public/loder.gif';
 import { callApi } from '@/services/apiService';
-import { Invoice } from '@/services/endpoint/Invoice';
+import { DownloadInvoice } from '@/services/endpoint/Invoice';
 import { formattedDate } from '@/utils/CommonFunctions';
 import Spinner from '@/icon/Spinner';
 
@@ -21,39 +21,58 @@ const toastOptions: ToastOptions = {
   theme: 'light'
 };
 
-const ExcelMerging = () => {
-  const [excelFiles, setExcelFiles] = useState<File[]>([]);
+const GenerateBilling = () => {
+  const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [previousMonthFile, setPreviousMonthFile] = useState<File | null>(null);
   const [disabled, setDisabled] = useState<boolean>(false);
   const [excelFileError, setExcelFileError] = useState<string | null>(null);
+  const [previousMonthFileError, setPreviousMonthFileError] = useState<
+    string | null
+  >(null);
 
-  const allFilesSelected = excelFiles.length !== 0 && !excelFileError;
+  const allFilesSelected =
+    excelFile !== null &&
+    !excelFileError &&
+    previousMonthFile !== null &&
+    !previousMonthFileError;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    isPreviousMonth = false
+  ) => {
     const files = e.target.files;
-    if (files) {
-      const selectedFiles = Array.from(files);
+    if (!files) return;
 
-      if (selectedFiles.length < 1 || selectedFiles.length > 3) {
-        setExcelFileError('Please upload min 1 or max 3 files.');
-      } else {
-        const invalidFile = selectedFiles.some(
-          (file) => !file.name.endsWith('.xlsx')
-        );
-        const largeFile = selectedFiles.some(
-          (file) => file.size > 100 * 1024 * 1024
-        );
+    const selectedFiles = Array.from(files);
+    const invalidFile = selectedFiles.some(
+      (file) => !file.name.endsWith('.xlsx')
+    );
+    const largeFile = selectedFiles.some(
+      (file) => file.size > 100 * 1024 * 1024
+    );
 
-        if (selectedFiles.length < 1 || selectedFiles.length > 3) {
-          setExcelFileError('Please upload min 1 or max 3 files.');
-        } else if (invalidFile) {
-          setExcelFileError('Please upload a valid Excel file (.xlsx).');
-        } else if (largeFile) {
-          setExcelFileError('File too large.');
-        } else {
-          setExcelFileError(null);
-          setExcelFiles(selectedFiles);
-        }
-      }
+    if (invalidFile) {
+      const error = 'Please upload a valid Excel file (.xlsx).';
+      isPreviousMonth
+        ? setPreviousMonthFileError(error)
+        : setExcelFileError(error);
+      return;
+    }
+
+    if (largeFile) {
+      const error = 'File too large.';
+      isPreviousMonth
+        ? setPreviousMonthFileError(error)
+        : setExcelFileError(error);
+      return;
+    }
+
+    if (isPreviousMonth) {
+      setPreviousMonthFileError(null);
+      setPreviousMonthFile(selectedFiles[0]);
+    } else {
+      setExcelFileError(null);
+      setExcelFile(selectedFiles[0]);
     }
   };
 
@@ -62,10 +81,15 @@ const ExcelMerging = () => {
     setDisabled(true);
 
     const formData = new FormData();
-    excelFiles.forEach((file) => formData.append('files', file));
+    excelFile && formData.append('file', excelFile);
+    previousMonthFile && formData.append('newFile', previousMonthFile);
 
     try {
-      const response = await callApi(Invoice.invoiceMerge, formData, 'blob');
+      const response = await callApi(
+        DownloadInvoice.downloadInvoice,
+        formData,
+        'blob'
+      );
 
       if (response.status === 200) {
         toast.success('Files processed successfully.', toastOptions);
@@ -85,7 +109,8 @@ const ExcelMerging = () => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
 
-        setExcelFiles([]);
+        setExcelFile(null);
+        setPreviousMonthFile(null);
       } else {
         toast.error('Failed to process the files.', toastOptions);
       }
@@ -111,7 +136,7 @@ const ExcelMerging = () => {
               <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                 <tbody>
                   <div className="text-sm font-semibold uppercase text-white bg-[#1492c8] dark:bg-bg-[#1492c8] dark:text-white p-4">
-                    Excel Merging
+                    Generate Billing File
                   </div>
                   <tr className="bg-white dark:bg-gray-800 dark:border-gray-700 text-center">
                     <td className=" py-8 font-medium text-gray-900 whitespace-nowrap dark:text-white text-start">
@@ -121,15 +146,14 @@ const ExcelMerging = () => {
                             htmlFor="file_input_csv_excel"
                             className="font-bold text-gray-800 dark:text-white"
                           >
-                            Upload Excel Files{' '}
+                            Upload Merged Excel File{' '}
                             <span className="text-red-500">*</span>
                           </label>
                           <input
-                            className="w-[820px] text-sm text-gray-900 border border-gray-300 cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                            className="w-96 text-sm text-gray-900 border border-gray-300 cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
                             id="file_input_csv_excel"
                             type="file"
                             accept=".xlsx"
-                            multiple
                             onChange={(e) => handleFileChange(e)}
                           />
                           <p
@@ -138,9 +162,37 @@ const ExcelMerging = () => {
                             }`}
                           >
                             {excelFileError ||
-                              'Please upload min 1 or max 3 (.xlsx) files.'}
+                              'Please upload exactly 1(.xlsx) file.'}
                           </p>
                         </div>
+
+                        <div className="flex flex-col px-6">
+                          <label
+                            htmlFor="previous_month_file"
+                            className="font-bold text-gray-800 dark:text-white"
+                          >
+                            Upload Previous Month File{' '}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            className="w-96 text-sm text-gray-900 border border-gray-300 cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                            id="previous_month_file"
+                            type="file"
+                            accept=".xlsx"
+                            onChange={(e) => handleFileChange(e, true)}
+                          />
+                          <p
+                            className={`mt-1 text-sm ${
+                              previousMonthFileError
+                                ? 'text-red-500'
+                                : 'text-gray-500'
+                            }`}
+                          >
+                            {previousMonthFileError ||
+                              'Please upload the previous month(.xlsx) file.'}
+                          </p>
+                        </div>
+
                         <div className="flex flex-col px-6">
                           <button
                             className={`w-48 bg-[#1492c8] hover:bg-[#2082ac] text-white font-bold py-2 px-4 rounded ${
@@ -151,7 +203,7 @@ const ExcelMerging = () => {
                             onClick={handleUpload}
                             disabled={!allFilesSelected || disabled}
                           >
-                            Merge Files
+                            Generate File
                             {disabled && <Spinner />}
                           </button>
                         </div>
@@ -168,4 +220,4 @@ const ExcelMerging = () => {
   );
 };
 
-export default ExcelMerging;
+export default GenerateBilling;
